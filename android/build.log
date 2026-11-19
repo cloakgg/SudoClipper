@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+C:\Users\Admin\.config\freebuff-desktop\local-projects\5e7d7482-0cbc-43c3-ae69-62c5a00d7d40\android\SudoClipperMobile\MainActivity.cs(48,16): warning CA1422: This call site is reachable on: 'Android' 24.0 and later. 'Window.SetNavigationBarColor(Color)' is obsoleted on: 'Android' 35.0 and later. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1422) [C:\Users\Admin\.config\freebuff-desktop\local-projects\5e7d7482-0cbc-43c3-ae69-62c5a00d7d40\android\SudoClipperMobile\SudoClipperMobile.csproj]
+C:\Users\Admin\.config\freebuff-desktop\local-projects\5e7d7482-0cbc-43c3-ae69-62c5a00d7d40\android\SudoClipperMobile\MainActivity.cs(47,16): warning CA1422: This call site is reachable on: 'Android' 24.0 and later. 'Window.SetStatusBarColor(Color)' is obsoleted on: 'Android' 35.0 and later. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1422) [C:\Users\Admin\.config\freebuff-desktop\local-projects\5e7d7482-0cbc-43c3-ae69-62c5a00d7d40\android\SudoClipperMobile\SudoClipperMobile.csproj]
+C:\Users\Admin\.config\freebuff-desktop\local-projects\5e7d7482-0cbc-43c3-ae69-62c5a00d7d40\android\SudoClipperMobile\MainActivity.cs(247,14): warning CA1422: This call site is reachable on: 'Android' 24.0 and later. 'Activity.OnBackPressed()' is obsoleted on: 'Android' 33.0 and later. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1422) [C:\Users\Admin\.config\freebuff-desktop\local-projects\5e7d7482-0cbc-43c3-ae69-62c5a00d7d40\android\SudoClipperMobile\SudoClipperMobile.csproj]
+  SudoClipperMobile -> C:\Users\Admin\.config\freebuff-desktop\local-projects\5e7d7482-0cbc-43c3-ae69-62c5a00d7d40\android\SudoClipperMobile\bin\Release\net10.0-android\SudoClipperMobile.dll
+  Optimizing assemblies for size may change the behavior of the app. Be sure to test after publishing. See: https://aka.ms/dotnet-illink
+  Optimizing assemblies for size. This process might take a while.
+  Optimizing assemblies for size may change the behavior of the app. Be sure to test after publishing. See: https://aka.ms/dotnet-illink
+  Optimizing assemblies for size. This process might take a while.
+EXIT=0

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Skill: Read a file
+
+# Read and display file contents
+# Usage: openfrog read-file <filepath>
+
+set -euo pipefail
+
+FILEPATH="${1:-}"
+
+if [[ -z "$FILEPATH" ]]; then
+    echo "Usage: openfrog read-file <filepath>"
+    exit 1
+fi
+
+if [[ -f "$FILEPATH" ]]; then
+    echo "=== File: $FILEPATH ==="
+    cat "$FILEPATH"
+    echo "=== End of file ==="
+else
+    echo "File not found: $FILEPATH"
+    exit 1
+fi

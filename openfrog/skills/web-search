@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Skill: Web search
+
+# Perform a web search
+# Usage: openfrog web-search <query>
+
+set -euo pipefail
+
+QUERY="${1:-}"
+
+if [[ -z "$QUERY" ]]; then
+    echo "Usage: openfrog web-search <query>"
+    exit 1
+fi
+
+echo "=== Web Search ==="
+echo "Query: $QUERY"
+echo "Status: Web search would open your default browser with the query."
+echo "         To enable this, install xdg-open or browse integration."
+echo ""
+echo "Search results would appear in your default browser."
+echo "For now, this is a stub skill."
+echo ""
+echo "=== End of Web Search ==="

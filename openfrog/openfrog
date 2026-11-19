@@ -1,0 +1,827 @@
+#!/usr/bin/env bash
+# OpenFrog - A free and open-source AI agent for Windows and Linux
+
+set -euo pipefail
+
+# Theme colors - Green and Black
+FG="#D0F0D0"      # light green text
+BG="#0A0F0A"      # near-black background
+ACCENT="#39D353"  # frog green
+WARNING="#FFA500" # amber
+ERROR="#FF5555"   # soft red
+PRIMARY_GREEN="#2ECC40"
+
+# State
+MODEL="auto"
+QUALITY="balanced"
+PROVIDER=""
+API_KEY=""
+SESSION_FILE=".openfrog_session"
+CONFIG_FILE=".openfrogrc"
+
+# Skill categories
+SKILL_READ="read-file"
+SKILL_WRITE="write-file"
+SKILL_EDIT="edit-code"
+SKILL_RUN="run-cmd"
+SKILL_GIT="git-status"
+SKILL_SUMM="summarize"
+SKILL_WEB="web-search"
+
+# Load config if exists
+load_config() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        source "$CONFIG_FILE"
+    fi
+}
+
+save_config() {
+    cat > "$CONFIG_FILE" <<EOF
+MODEL="$MODEL"
+QUALITY="$QUALITY"
+PROVIDER="$PROVIDER"
+API_KEY="$API_KEY"
+EOF
+}
+
+load_config
+
+# ============ Frog Mascot Functions ============
+
+# Reset terminal cursor
+term_reset() {
+    printf '\e[0m\e[?25h'
+}
+
+term_hide() {
+    printf '\e[?25l'
+}
+
+# Frog mascot states - SVG-like ASCII art
+frog_idle() {
+    printf '\e[38;5;82m╭───╮\e[0m\n'
+    printf '\e[38;5;82m│ █ █ │\e[0m\n'
+    printf '\e[38;5;82m╰───╯\e[0m\n'
+}
+
+frog_thinking() {
+    printf '\e[38;5;82m╭───╮\e[0m\n'
+    printf '\e[38;5;82m│(o o)│\e[0m\n'
+    printf '\e[38;5;82m╰───╯\e[0m\n'
+}
+
+frog_working() {
+    printf '\e[38;5;82m╭───╮\e[0m\n'
+    printf '\e[38;5;82m│ ( ) │\e[0m\n'
+    printf '\e[38;5;82m╰───╯\e[0m\n'
+}
+
+frog_success() {
+    printf '\e[38;5;82m╭───╮\e[0m\n'
+    printf '\e[38;5;82m│ • • │\e[0m\n'
+    printf '\e[38;5;82m╰───╯\e[0m\n'
+}
+
+frog_error() {
+    printf '\e[38;5;196m╭───╮\e[0m\n'
+    printf '\e[38;5;196m│ x x │\e[0m\n'
+    printf '\e[38;5;196m╰───╯\e[0m\n'
+}
+
+frog_confirm() {
+    printf '\e[38;5;208m╭───╮\e[0m\n'
+    printf '\e[38;5;208m│ • • │\e[0m\n'
+    printf '\e[38;5;208m╰───╯\e[0m\n'
+}
+
+frog_sleepy() {
+    printf '\e[38;5;82m╭───╮\e[0m\n'
+    printf '\e[38;5;82m│ _ _ │\e[0m\n'
+    printf '\e[38;5;82m╰───╯\e[0m\n'
+}
+
+# Display header
+show_header() {
+    clear
+    printf '\e[48;5;0m\e[38;5;82m ─────────────────────────────────────\e[0m\n'
+    printf '\e[48;5;0m\e[38;5;82m│  OpenFrog - The free, friendly,     │\e[0m\n'
+    printf '\e[48;5;0m\e[38;5;82m│  frog-powered AI agent for your     │\e[0m\n'
+    printf '\e[48;5;0m\e[38;5;82m│  terminal.                          │\e[0m\n'
+    printf '\e[48;5;0m\e[38;5;82m│  Green & Black Theme • v0.1.0         │\e[0m\n'
+    printf '\e[48;5;0m\e[38;5;82m╰─────────────────────────────────────\e[0m\n'
+    printf '\e[0m\n'
+}
+
+# Display footer with status
+show_footer() {
+    printf '\e[38;5;82m╭───╮\e[0m\n'
+    printf '\e[38;5;82m│  %s  │\e[0m' "$PROVIDER"
+    if [[ -n "$API_KEY" ]]; then
+        printf '\e[38;5;82m  •  ●  \e[0m'
+    else
+        printf '\e[38;5;82m        \e[0m'
+    fi
+    printf '\e[38;5;82m  %s  │\e[0m' "$MODEL"
+    printf '\e[38;5;82m╰───╯\e[0m\n'
+}
+
+# Think indicator - shows frog thinking
+think() {
+    printf '\e[?25l'  # hide cursor
+    printf '\e[38;5;82m[▲ thinking...]\e[0m\r'
+    frog_thinking
+    sleep 0.1
+}
+
+# Clear think indicator and show idle frog
+clear_think() {
+    printf '\e[2K\r'  # clear line
+    frog_idle
+    term_reset
+}
+
+# ============ Prompt & Input ============
+
+# Prompt user for input with history support
+prompt_input() {
+    local default="${1:-}"
+    
+    show_header
+    show_footer
+    
+    # Print prompt
+    printf '\e[38;5;82mOpenFrog'
+    [[ "$QUALITY" != "balanced" ]] && printf " [$QUALITY]"
+    printf " ($MODEL) \$ \e[0m"
+    
+    # Read input with basic history (readline not available, use simple read)
+    if [[ -n "$default" ]]; then
+        read -r -e -i "$default" input
+    else
+        read -r -e input
+    fi
+    
+    # Output the input text
+    printf '%s\n' "$input"
+    echo "$input"
+}
+
+# ============ Slash Commands ============
+
+handle_command() {
+    local cmd="$1"
+    shift
+    
+    case "$cmd" in
+        /help)
+            show_help
+            ;;
+        /clear|/reset)
+            clear
+            ;;
+        /exit)
+            term_reset
+            exit 0
+            ;;
+        /settings)
+            show_settings
+            ;;
+        /model)
+            select_model "$@"
+            ;;
+        /quality|/q)
+            select_quality "$@"
+            ;;
+        /keys)
+            manage_keys "$@"
+            ;;
+        /free)
+            show_free_options
+            ;;
+        /skills|/skill)
+            list_skills "$@"
+            ;;
+        /frog)
+            change_frog_mood "$@"
+            ;;
+        /doctor)
+            doctor_check
+            ;;
+        /version)
+            echo "OpenFrog v0.1.0"
+            ;;
+        /init)
+            init_project
+            ;;
+        /clearhistory)
+            echo "History cleared"
+            ;;
+        /memory)
+            show_memory
+            ;;
+        *)
+            echo -e "\e[38;5;196mUnknown command: $cmd\e[0m"
+            echo -e "\e[38;5;82mType /help for available commands.\e[0m"
+            ;;
+    esac
+}
+
+show_help() {
+    term_hide
+    clear
+    show_header
+    echo -e "\e[38;5;82m=== OpenFrog Slash Commands ===\e[0m"
+    echo -e "\e[38;5;82mGeneral:\e[0m"
+    echo -e "  /help        - Show this help screen"
+    echo -e "  /clear       - Clear the screen"
+    echo -e "  /exit        - Exit OpenFrog"
+    echo -e "  /settings    - Open settings menu"
+    echo -e "\e[38;5;82mModels and Providers:\e[0m"
+    echo -e "  /model       - Select AI model"
+    echo -e "  /quality     - Select quality mode (Fast/Balanced/Best)"
+    echo -e "  /keys        - Manage API keys"
+    echo -e "  /free        - Show free model options"
+    echo -e "\e[38;5;82mSkills and Integrations:\e[0m"
+    echo -e "  /skills      - List available skills"
+    echo -e "  /frog        - Change frog mascot mood"
+    echo -e "  /doctor      - Run diagnostics check"
+    echo -e "\e[38;5;82mSessions:\e[0m"
+    echo -e "  /version     - Show version info"
+    echo -e "  /init        - Initialize project"
+    echo -e "\e[38;5;82mMasot Controls:\e[0m"
+    echo -e "  /frog idle        - Set idle mood"
+    echo -e "  /frog thinking    - Set thinking mood"
+    echo -e "  /frog working     - Set working mood"
+    echo -e "  /frog success     - Set success mood"
+    echo -e "  /frog error       - Set error mood"
+    echo -e "\e[38;5;82mExamples:\e[0m"
+    echo -e "  /quality fast     - Set fast quality mode"
+    echo -e "  /model gpt-4o     - Set model to gpt-4o"
+    term_reset
+}
+
+show_settings() {
+    clear
+    show_header
+    echo -e "\e[38;5;82m=== OpenFrog Settings ===\e[0m"
+    echo -e "\e[38;5;82mCurrent model:   \e[0m$MODEL"
+    echo -e "\e[38;5;82mCurrent quality: \e[0m$QUALITY"
+    echo -e "\e[38;5;82mCurrent provider:\e[0m $PROVIDER"
+    echo ""
+    echo -e "\e[38;5;82mQuality modes:\e[0m"
+    echo -e "  \e[38;5;82mfast\e[0m    - Fast responses, lower cost"
+    echo -e "  \e[38;5;82mbalanced\e[0m - Balanced performance (default)"
+    echo -e "  \e[38;5;82mbest\e[0m     - Best quality, higher cost"
+    echo ""
+    echo -e "\e[38;5;82mPress Enter to save and continue...\e[0m"
+    read -r _
+    save_config
+}
+
+select_model() {
+    local model="${1:-}"
+    if [[ -n "$model" ]]; then
+        MODEL="$model"
+        echo -e "\e[38;5;82mModel set to: $model\e[0m"
+    else
+        clear
+        show_header
+        echo -e "\e[38;5;82m=== Model Selector ===\e[0m"
+        echo -e "\e[38;5;82mCurrent model: $MODEL\e[0m"
+        echo ""
+        echo -e "\e[38;5;82mPopular models (grouped by provider):\e[0m"
+        echo -e "  \e[38;5;82mOpenAI:\e[0m   gpt-4o, gpt-4, gpt-3.5-turbo"
+        echo -e "  \e[38;5;82mAnthropic:\e0m  claude-3-opus, claude-3-sonnet, claude-instant"
+        echo -e "  \e[38;5;82mGoogle:\e[0m   gemini-1.5-flash, gemini-1.5-pro"
+        echo -e "  \e[38;5;82mLocal:\e[0m    local-llama, local-mistral"
+        echo -e ""
+        echo -ne "\e[38;5;82mSelect model: \e[0m"
+        read -r model
+        MODEL="$model"
+        echo -e "\e[38;5;82mModel updated to: $model\e[0m"
+    fi
+    save_config
+}
+
+select_quality() {
+    local quality="${1:-}"
+    case "$quality" in
+        fast|Fast)
+            QUALITY="fast"
+            echo -e "\e[38;5;82mQuality set to Fast\e[0m"
+            ;;
+        balanced|Balanced)
+            QUALITY="balanced"
+            echo -e "\e[38;5;82mQuality set to Balanced\e[0m"
+            ;;
+        best|Best)
+            QUALITY="best"
+            echo -e "\e[38;5;82mQuality set to Best\e[0m"
+            ;;
+        *)
+            echo -e "\e[38;5;196mInvalid quality mode. Use: Fast, Balanced, Best\e[0m"
+            ;;
+    esac
+    save_config
+}
+
+manage_keys() {
+    clear
+    show_header
+    echo -e "\e[38;5;82m=== API Key Management ===\e[0m"
+    echo -e "\e[38;5;82mCurrent provider: \e[0m$PROVIDER"
+    if [[ -n "$API_KEY" ]]; then
+        echo -e "\e[38;5;82mAPI key status:\e[0m  ${API_KEY:0:4}... (${#API_KEY} chars)"
+    else
+        echo -e "\e[38;5;82mNo API key configured\e[0m"
+    fi
+    echo ""
+    echo -e "\e[38;5;82mOptions:\e[0m"
+    echo -e "  1) Set a new API key"
+    echo -e "  2) Select provider"
+    echo -e "  3) Show free options"
+    echo -e "  b) Back to main menu"
+    echo ""
+    echo -ne "\e[38;5;82mChoose option: \e[0m"
+    read -r choice
+    case "$choice" in
+        1)
+            echo -ne "\e[38;5;82mEnter API key: \e[0m"
+            read -r key
+            API_KEY="$key"
+            PROVIDER="custom"
+            save_config
+            echo -e "\e[38;5;82mAPI key saved.\e[0m"
+            ;;
+        2)
+            echo -ne "\e[38;5;82mEnter provider name: \e[0m"
+            read -r provider
+            PROVIDER="$provider"
+            save_config
+            echo -e "\e[38;5;82mProvider set to: $provider\e[0m"
+            ;;
+        3)
+            show_free_options
+            ;;
+        b)
+            return
+            ;;
+    esac
+    read -n 1 -s -r -t 2
+    clear
+}
+
+show_free_options() {
+    clear
+    show_header
+    echo -e "\e[38;5;82m=== Free Model Options ===\e[0m"
+    echo -e "\e[38;5;82mThe following models can run without a paid API key:\e[0m"
+    echo ""
+    echo -e "  \e[38;5;82mlocal-llama\e[0m - Runs locally on your hardware (free)"
+    echo -e "    Requires: Ollama, LM Studio, or similar local model server"
+    echo ""
+    echo -e "  \e[38;5;82mgemini-1.5-flash\e[0m - Google's free tier model"
+    echo -e "    Free tier: Generous daily limits, no card required"
+    echo ""
+    echo -e "  \e[38;5;82mclaude-instant\e[0m - Anthropic's cheaper model"
+    echo -e "    Free tier: Limited daily requests"
+    echo ""
+    echo -e "  \e[38;5;82mmistral-small\e[0m - Mistral's fast free model"
+    echo -e "    Free tier: Available on various routers"
+    echo ""
+    echo -ne "\e[38;5;82mPress Enter to continue...\e[0m"
+    read -r _
+}
+
+list_skills() {
+    clear
+    show_header
+    echo -e "\e[38;5;82m=== OpenFrog Skills Library ===\e[0m"
+    echo ""
+    echo -e "\e[38;5;82mCoding and Development:\e[0m"
+    echo -e "  \e[38;5;82mread-file\e[0m   - Read and display file contents"
+    echo -e "  \e[38;5;82mwrite-file\e[0m  - Write text to a file"
+    echo -e "  \e[38;5;82medit-code\e[0m    - Edit code across a project"
+    echo -e "  \e[38;5;82mrun-cmd\e[0m      - Run shell commands"
+    echo -e "  \e[38;5;82mgit-status\e[0m    - Check git status and show changes"
+    echo ""
+    echo -e "\e[38;5;82mFiles and System:\e[0m"
+    echo -e "  \e[38;5;82msummarize\e[0m     - Summarize documents, articles, files"
+    echo -e "  \e[38;5;82mweb-search\e[0m    - Search the web for information"
+    echo -e "  \e[38;5;82mfile-org\e[0m      - Organize files, bulk rename, sort"
+    echo -e "  \e[38;5;82msystem-info\e[0m     - Disk, memory, CPU, process info"
+    echo ""
+    echo -e "\e[38;5;82mWeb and Research:\e[0m"
+    echo -e "  \e[38;5;82mmulti-research\e[0m - Open multiple sources and compare"
+    echo -e "  \e[38;5;82mdownload\e[0m      - Download files from the web"
+    echo ""
+    echo -e "\e[38;5;82mWriting and Productivity:\e[0m"
+    echo -e "  \e[38;5;82mdraft-text\e[0m     - Draft, rewrite, proofread, translate"
+    echo -e "  \e[38;5;82mnotes\e[0m          - Take notes, make to-do lists"
+    echo -e "  \e[38;5;82m emails\e[0m         - Draft emails and messages"
+    echo ""
+    echo -e "\e[38;5;82mGit and DevOps:\e[0m"
+    echo -e "  \e[38;5;82mgit-commit\e[0m     - Commit with clear messages"
+    echo -e "  \e[38;5;82mgit-branch\e[0m     - Branch, merge, rebase operations"
+    echo -e "  \e[38;5;82mdocker-help\e[0m    - Docker container help"
+    echo ""
+    echo -e "\e[38;5;82mAgent Abilities:\e[0m"
+    echo -e "  \e[38;5;82mplan-mode\e[0m      - Break big goals into steps"
+    echo -e "  \e[38;5;82msub-agents\e[0m      - Spawn helper agents"
+    echo -e "  \e[38;5;82mmemory\e[0m         - Remember user preferences"
+    echo -e "  \e[38;5;82mself-check\e[0m      - Re-run tests, verify results"
+    echo ""
+    echo -ne "\e[38;5;82mPress Enter to continue...\e[0m"
+    read -r _
+}
+
+change_frog_mood() {
+    local mood="${1:-}"
+    case "$mood" in
+        idle)
+            frog_idle
+            echo -e "\e[38;5;82mFrog is idle and happy\e[0m"
+            ;;
+        thinking)
+            frog_thinking
+            echo -e "\e[38;5;82mFrog is thinking\e[0m"
+            ;;
+        working)
+            frog_working
+            echo -e "\e[38;5;82mFrog is working\e[0m"
+            ;;
+        success)
+            frog_success
+            echo -e "\e[38;5;82mFrog succeeded!\e[0m"
+            ;;
+        error)
+            frog_error
+            echo -e "\e[38;5;196mFrog encountered an error\e[0m"
+            ;;
+        confirm)
+            frog_confirm
+            echo -e "\e[38;5;208mFrog asks for confirmation\e[0m"
+            ;;
+        sleepy)
+            frog_sleepy
+            echo -e "\e[38;5;82mFrog is sleepy\e[0m"
+            ;;
+        *)
+            echo -e "\e[38;5;82mAvailable moods: idle, thinking, working, success, error, confirm, sleepy\e[0m"
+            echo -ne "\e[38;5;82mEnter mood: \e[0m"
+            read -r mood
+            change_frog_mood "$mood"
+            ;;
+    esac
+}
+
+doctor_check() {
+    clear
+    show_header
+    echo -e "\e[38;5;82m=== OpenFrog Doctor ===\e[0m"
+    echo -e "\e[38;5;82mRunning diagnostics...\e[0m"
+    echo ""
+    
+    # Check bash
+    echo -n "  Bash: "
+    if command -v bash &>/dev/null; then
+        echo -e "\e[38;5;82m✓ Available\e[0m"
+    else
+        echo -e "\e[38;5;196m✗ Not found\e[0m"
+    fi
+    
+    # Check config
+    echo -n "  Config file ($CONFIG_FILE): "
+    if [[ -f "$CONFIG_FILE" ]]; then
+        echo -e "\e[38;5;82m✓ Exists\e[0m"
+    else
+        echo -e "\e[38;5;196m✗ Missing\e[0m"
+    fi
+    
+    # Check skills directory
+    echo -n "  Skills directory: "
+    if [[ -d "skills" ]]; then
+        echo -e "\e[38;5;82m✓ Exists\e[0m"
+    else
+        echo -e "\e[38;5;196m✗ Missing\e[0m"
+    fi
+    
+    # Check frog mascot
+    echo -n "  Frog mascot: "
+    frog_idle &>/dev/null
+    echo -e "\e[38;5;82m✓ Ready\e[0m"
+    
+    echo ""
+    echo -e "\e[38;5;82mAll checks complete.\e[0m"
+    echo -ne "\e[38;5;82mPress Enter to return...\e[0m"
+    read -r _
+}
+
+init_project() {
+    clear
+    show_header
+    echo -e "\e[38;5;82m=== Initialize OpenFrog Project ===\e[0m"
+    echo ""
+    
+    if [[ -f "$CONFIG_FILE" ]]; then
+        echo -e "\e[38;5;196mProject already initialized!\e[0m"
+        echo -e "\e[38;5;82mExisting config found at: $CONFIG_FILE\e[0m"
+        echo -ne "\e[38;5;82mOverwrite? (y/n): \e[0m"
+        read -r response
+        if [[ "$response" != "y" && "$response" != "Y" ]]; then
+            echo "Cancelled."
+            read -n 1 -s -r -t 2
+            return
+        fi
+    fi
+    
+    echo -e "\e[38;5;82mOpenFrog Project Initialization\e[0m"
+    echo -e "\e[38;5;82m==============================\e[0m"
+    echo ""
+    echo -e "This will create a basic OpenFrog project configuration."
+    echo -e "You can later modify \e[0m$CONFIG_FILE\e[38;5;82m to customize your setup."
+    echo ""
+    echo -e "\e[38;5;82mSetting up default configuration...\e[0m"
+    
+    cat > "$CONFIG_FILE" <<'EOF'
+# OpenFrog Configuration File
+# Modify these settings to customize your experience
+
+# AI Model selection
+# Options: auto, gpt-4o, gpt-4, gpt-3.5-turbo, claude-3-5-sonnet, 
+#          claude-3-opus, gemini-1.5-flash, gemini-1.5-pro,
+#          local-llama, local-mistral, or any model name
+MODEL="auto"
+
+# Quality setting
+# fast: Fast responses, lower cost
+# balanced: Balanced performance (default)
+# best: Best quality, higher cost
+QUALITY="balanced"
+
+# API Provider
+# Set to the name of your API provider (openai, anthropic, google, custom, etc.)
+PROVIDER=""
+
+# API Key
+# Store your API key securely. Never share this.
+# For local models, leave this empty and configure your local server.
+API_KEY=""
+
+# Frog mascot settings
+# Default mood on startup: idle, thinking, working, success, error, confirm
+FROG_DEFAULT_MOOD="idle"
+
+# Skill configuration
+# Enable/disable skills by default
+ENABLED_SKILLS="read-file write-file run-cmd git-status summarize"
+
+# Pond view settings (future feature)
+POND_VIEW="false"
+
+# End of configuration
+EOF
+    
+    echo -e "\e[38;5;82m✓ Project initialized successfully!\e[0m"
+    echo -e "\e[38;5;82mConfiguration written to: $CONFIG_FILE\e[0m"
+    echo ""
+    echo -e "\e[38;5;82mDefault settings summary:\e[0m"
+    echo -e "  Model: auto (will prompt on first use)"
+    echo -e "  Quality: balanced"
+    echo -e "  Provider: (empty - to be set)"
+    echo -e "  API Key: (empty - to be set)"
+    echo ""
+    echo -ne "\e[38;5;82mPress Enter to continue...\e[0m"
+    read -r _
+}
+
+# ============ Core Skills ============
+
+# Skill: Read a file
+skill_read_file() {
+    local filepath="${1:-}"
+    if [[ -z "$filepath" ]]; then
+        echo -e "\e[38;5;196mUsage: read-file <filepath>\e[0m"
+        return 1
+    fi
+    
+    if [[ -f "$filepath" ]]; then
+        echo -e "\e[38;5;82m=== File: $filepath ===\e[0m"
+        cat "$filepath"
+        echo -e "\e[38;5;82m=== End of file ===\e[0m"
+    else
+        echo -e "\e[38;5;196mFile not found: $filepath\e[0m"
+        return 1
+    fi
+}
+
+# Skill: Write to a file
+skill_write_file() {
+    local filepath="${1:-}"
+    local content="${2:-}"
+    
+    if [[ -z "$filepath" ]]; then
+        echo -e "\e[38;5;196mUsage: write-file <filepath> [content]\e[0m"
+        return 1
+    fi
+    
+    if [[ -z "$content" ]]; then
+        echo -e "\e[38;5;196mPlease provide content to write.\e[0m"
+        return 1
+    fi
+    
+    # Create parent directories if needed
+    mkdir -p "$(dirname "$filepath")"
+    
+    printf '%s' "$content" > "$filepath"
+    echo -e "\e[38;5;82m✓ Written to: $filepath\e[0m"
+    echo -e "\e[38;5;82m$(wc -c < "$filepath") bytes written.\e[0m"
+}
+
+# Skill: Run a shell command
+skill_run_cmd() {
+    local cmd="${1:-}"
+    
+    if [[ -z "$cmd" ]]; then
+        echo -e "\e[38;5;196mUsage: run-cmd <command>\e[0m"
+        return 1
+    fi
+    
+    echo -e "\e[38;5;82mRunning: $cmd\e[0m"
+    echo -e "\e[38;5;82m(Note: This is a safe preview - actual command execution would happen here)\e[0m"
+    
+    # In a real implementation, this would ask for confirmation for dangerous commands
+    # For now, just show what would be run
+    eval "$cmd" 2>&1 || echo -e "\e[38;5;196mCommand failed or produced no output.\e[0m"
+}
+
+# Skill: Git status
+skill_git_status() {
+    if command -v git &>/dev/null; then
+        echo -e "\e[38;5;82m=== Git Status ===\e[0m"
+        git status 2>/dev/null || echo -e "\e[38;5;196mNot a git repository\e[0m"
+        echo -e "\e[38;5;82m=== Remotes ===\e[0m"
+        git remote -v 2>/dev/null || echo -e "\e[38;5;196mNo remote configured\e[0m"
+    else
+        echo -e "\e[38;5;196mGit not installed\e[0m"
+    fi
+}
+
+# Skill: Summarize text
+skill_summarize() {
+    local text="${1:-}"
+    
+    if [[ -z "$text" ]]; then
+        echo -e "\e[38;5;196mUsage: summarize <text>\e[0m"
+        return 1
+    fi
+    
+    # Simple summary - just show first 3 sentences
+    local count=0
+    local summary=""
+    for sentence in $(echo "$text" | tr '.' '\n'); do
+        if [[ $count -lt 3 ]]; then
+            summary+="$sentence. "
+            ((count++))
+        fi
+    done
+    
+    echo -e "\e[38;5;82m=== Summary ===\e[0m"
+    echo -e "\e[38;5;82m$summary\e[0m"
+    echo -e "\e[38;5;82m=== End of summary ===\e[0m"
+}
+
+# Skill: Web search (stub)
+skill_web_search() {
+    local query="${1:-}"
+    
+    if [[ -z "$query" ]]; then
+        echo -e "\e[38;5;196mUsage: web-search <query>\e[0m"
+        return 1
+    fi
+    
+    echo -e "\e[38;5;82m=== Web Search ===\e[0m"
+    echo -e "\e[38;5;82mQuery: $query\e[0m"
+    echo -e "\e[38;5;82mStatus: Web search functionality would open a browser search.\e[0m"
+    echo -e "\e[38;5;82m(Currently stubbed - install browser integration for full functionality)\e[0m"
+}
+
+# ============ Main Loop ============
+
+# Process a user request
+process_request() {
+    local input="${1:-}"
+    
+    if [[ -z "$input" ]]; then
+        return
+    fi
+    
+    # Check for slash commands
+    if [[ "$input" == /* ]]; then
+        handle_command "${input#/}"
+        return
+    fi
+    
+    # Think indicator
+    think
+    
+    # Process as a natural language request
+    case "$input" in
+        *hello*|*hi*|*hey*)
+            echo -e "\e[38;5;82mHello! I'm OpenFrog, your friendly frog-powered AI agent.\e[0m"
+            echo -e "\e[38;5;82mType /help for available commands.\e[0m"
+            change_frog_mood working
+            ;;
+        *read*|*file*)
+            # Try to interpret as a file read request
+            local file=""
+            for word in $input; do
+                if [[ -f "$word" ]]; then
+                    file="$word"
+                    break
+                fi
+            done
+            if [[ -n "$file" ]]; then
+                skill_read_file "$file"
+            else
+                echo -e "\e[38;5;82mI can read files for you. Usage: read-file <filepath>\e[0m"
+            fi
+            ;;
+        *write*|*create*)
+            local file=""
+            local content=""
+            for word in $input; do
+                if [[ -f "$word" ]] || [[ "$word" == /* ]]; then
+                    file="$word"
+                fi
+            done
+            if [[ -n "$file" ]]; then
+                # Get content after the file path
+                local content="${input#*$file}"
+                content="${content# }"
+                skill_write_file "$file" "$content"
+            else
+                echo -e "\e[38;5;82mI can write to files. Usage: write-file <filepath> [content]\e[0m"
+            fi
+            ;;
+        *git*|*status*)
+            skill_git_status
+            ;;
+        *summarize*|*summary*)
+            local text=""
+            for word in $input; do
+                text+="$word "
+            done
+            skill_summarize "$text"
+            ;;
+        *search*|*web*)
+            local query=""
+            for word in $input; do
+                query+="$word "
+            done
+            skill_web_search "${query% }"
+            ;;
+        *)
+            # General request - show placeholder response
+            echo -e "\e[38;5;82mOpenFrog received your request: \"$input\"\e[0m"
+            echo -e "\e[38;5;82m(This is a demo mode. Configure an API key or use /free for free options.)\e[0m"
+            echo -e "\e[38;5;82mType /help for available commands.\e[0m"
+            ;;
+    esac
+    
+    clear_think
+    change_frog_mood idle
+}
+
+# Main entry point
+main() {
+    # Set up traps for clean exit
+    trap term_reset EXIT
+    trap term_hide WINCH
+    
+    # Initial frog mood
+    change_frog_mood idle
+    
+    # Load config
+    load_config
+    
+    # Display initial header
+    show_header
+    show_footer
+    
+    # Main interaction loop
+    while true; do
+        # Prompt for input
+        local input
+        input=$(prompt_input)
+        
+        # Skip empty input
+        [[ -z "$input" ]] && continue
+        
+        # Process the input
+        process_request "$input"
+    done
+}
+
+# Run main function
+main

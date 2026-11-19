@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Command: /settings
+
+# Open settings menu
+echo "OpenFrog Settings:"
+echo "=================="
+echo ""
+echo "Current settings:"
+echo "  Model: ${MODEL:-auto}"
+echo "  Quality: ${QUALITY:-balanced}"
+echo "  Provider: ${PROVIDER:-(none)}"
+echo ""
+echo "Available options:"
+echo "  1) Change model"
+echo "  2) Change quality mode (fast/balanced/best)"
+echo "  3) Set API provider"
+echo "  4) Back to main menu"
+echo ""
+echo -n "Choose option [1-4]: "
+read -r choice
+
+case "$choice" in
+    1)
+        echo -n "Enter new model: "
+        read -r model
+        MODEL="$model"
+        echo "Model set to: $model"
+        ;;
+    2)
+        echo -n "Quality mode [fast/balanced/best]: "
+        read -r quality
+        QUALITY="$quality"
+        echo "Quality set to: $quality"
+        ;;
+    3)
+        echo -n "Enter provider name: "
+        read -r provider
+        PROVIDER="$provider"
+        echo "Provider set to: $provider"
+        ;;
+    4)
+        return
+        ;;
+    *)
+        echo "Invalid option"
+        ;;
+esac

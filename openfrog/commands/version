@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Command: /version
+
+# Show version information
+echo "OpenFrog v0.1.0"
+echo "A free and open-source AI agent for Windows and Linux"
+echo "Theme: Green & Black"
+echo "Mascot: Frog"
+echo ""
+echo "Built with: Bash"
+echo "Features: Skills system, frog mascot, slash commands"

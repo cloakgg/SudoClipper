@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Skill: System information
+
+# Display system information
+# Usage: openfrog system-info
+
+set -euo pipefail
+
+echo "=== System Information ==="
+
+# CPU info
+echo "CPU:"
+lscpu 2>/dev/null || cat /proc/cpuinfo 2>/dev/null | head -5 || echo "Could not read CPU info"
+
+# Memory info
+echo ""
+echo "Memory:"
+free -h 2>/dev/null || cat /proc/meminfo 2>/dev/null | head -3 || echo "Could not read memory info"
+
+# Disk info
+echo ""
+echo "Disk usage:"
+df -h 2>/dev/null || echo "Could not read disk info"
+
+# OS info
+echo ""
+echo "OS:"
+uname -srm 2>/dev/null || echo "Could not determine OS"
+
+echo ""
+echo "=== End of System Information ==="

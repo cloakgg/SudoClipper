@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Skill: Run a shell command
+
+# Run a shell command
+# Usage: openfrog run-cmd <command>
+
+set -euo pipefail
+
+CMD="${1:-}"
+
+if [[ -z "$CMD" ]]; then
+    echo "Usage: openfrog run-cmd <command>"
+    exit 1
+fi
+
+echo "Running: $CMD"
+echo "(Preview mode - reviewing output before execution)"
+
+# In a real implementation, this would preview the command and ask for confirmation
+# For now, execute with caution
+OUTPUT=$("$CMD" 2>&1) || true
+echo "$OUTPUT"

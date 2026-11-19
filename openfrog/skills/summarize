@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Skill: Summarize text
+
+# Summarize provided text
+# Usage: openfrog summarize "<text>"
+
+set -euo pipefail
+
+TEXT="${1:-}"
+
+if [[ -z "$TEXT" ]]; then
+    echo "Usage: openfrog summarize \"<text>\""
+    exit 1
+fi
+
+# Simple summary: extract first few sentences and key points
+echo "=== Summary ==="
+
+# Count sentences and extract key parts
+SENTENCE_COUNT=$(echo "$TEXT" | grep -o '\.[^.]*\.' | wc -l)
+echo "Original text has approximately $SENTENCE_COUNT sentences."
+
+# Extract first 3 sentences as a simple summary
+FIRST_PART=$(echo "$TEXT" | head -1 | cut -'.' -f1,2,3)
+echo "Key points: $FIRST_PART..."
+
+# Simple keyword extraction (buzzwords)
+echo "Keywords found: $(echo "$TEXT" | tr ' ' '\n' | grep -i -E '(error|warning|important|note|TODO|FIXME)' | sort | uniq -c | sort -rn | head -5)"
+
+echo "=== End of Summary ==="

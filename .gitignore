@@ -1,0 +1,7 @@
+.tools/
+dist/
+web/node_modules/
+src/SudoClipper/bin/
+src/SudoClipper/obj/
+*.user
+.DS_Store

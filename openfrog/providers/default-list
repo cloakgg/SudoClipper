@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# Default provider base URLs for OpenFrog
+
+# OpenAI-compatible endpoints
+OPENAI_BASE_URLS=(
+    "https://api.openai.com/v1"
+    "https://openrouter.ai/api/v1"
+    "https://litellm.com/v1"
+    "https://9router.top/api/v1"
+)
+
+# Anthropic-compatible endpoints
+ANTHROPIC_BASE_URLS=(
+    "https://api.anthropic.com"
+    "https://api.litellm.com/v1/anthropic"
+)
+
+# Google Gemini endpoints
+GEMINI_BASE_URLS=(
+    "https://generativelanguage.googleapis.com/v1beta"
+    "https://generativelanguage.googleapis.com/v1"
+)
+
+# Local model endpoints (for Ollama, LM Studio, etc.)
+LOCAL_BASE_URLS=(
+    "http://localhost:11434"     # Ollama
+    "http://localhost:1234"      # LM Studio
+    "http://127.0.0.1:8080"      # Custom local server
+)
+
+# Free model providers (no API key required for basic use)
+FREE_PROVIDERS=(
+    "local-llama"
+    "gemini-1.5-flash-free"
+    "claude-instant-free"
+)
+
+# Display the default provider list
+echo "=== OpenFrog Default Provider List ==="
+echo ""
+echo "OpenAI-compatible endpoints:"
+for url in "${OPENAI_BASE_URLS[@]}"; do
+    echo "  • $url"
+done
+
+echo ""
+echo "Anthropic-compatible endpoints:"
+for url in "${ANTHROPIC_BASE_URLS[@]}"; do
+    echo "  • $url"
+done
+
+echo ""
+echo "Google Gemini endpoints:"
+for url in "${GEMINI_BASE_URLS[@]}"; do
+    echo "  • $url"
+done
+
+echo ""
+echo "Local model endpoints (Ollama, LM Studio):"
+for url in "${LOCAL_BASE_URLS[@]}"; do
+    echo "  • $url"
+done
+
+echo ""
+echo "Free providers (no API key required):"
+for provider in "${FREE_PROVIDERS[@]}"; do
+    echo "  • $provider"
+done
+
+echo ""
+echo "=== End of Provider List ==="

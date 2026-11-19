@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SudoClipperMobile</name>
+    </assembly>
+    <members>
+        <member name="T:SudoClipperMobile.MainActivity">
+            <summary>
+            Prototype Android shell: the whole SUDOCLIPPER studio (clipper, chat, memory, config)
+            inside a WebView that talks to a SUDOCLIPPER server on the local network.
+            </summary>
+        </member>
+        <member name="T:SudoClipperMobile.Resource">
+            <summary>
+            Android Resource Designer class.
+            Exposes the Android Resource designer assembly into the project Namespace.
+            </summary>
+        </member>
+    </members>
+</doc>

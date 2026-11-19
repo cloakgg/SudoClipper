@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Skill: Write to a file
+
+# Write text to a file
+# Usage: openfrog write-file <filepath> [content]
+
+set -euo pipefail
+
+FILEPATH="${1:-}"
+SHIFT_CONTENT="${2:-}"
+
+if [[ -z "$FILEPATH" ]]; then
+    echo "Usage: openfrog write-file <filepath> [content]"
+    exit 1
+fi
+
+if [[ -z "$SHIFT_CONTENT" ]]; then
+    echo "Please provide content to write."
+    exit 1
+fi
+
+# Create parent directories if needed
+mkdir -p "$(dirname "$FILEPATH")"
+
+# Write content to file (preserve literal content)
+printf '%s' "$SHIFT_CONTENT" > "$FILEPATH"
+
+echo "Written to: $FILEPATH"
+echo "$(wc -c < "$FILEPATH") bytes written"

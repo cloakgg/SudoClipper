@@ -1,0 +1,40 @@
+<api>
+  <jcw-types>
+    <type name="MobileApp" package="crc641dd293c482e5ba83" application_java_class="android.app.Application" mono_runtime_initialization="mono.MonoPackageManager.LoadApplication (context);" extends_type="android.app.Application" is_application="True" partial_assembly_qualified_name="SudoClipperMobile.MobileApp, SudoClipperMobile" application_constructor="MobileApp" />
+    <type name="MainActivity" package="crc641dd293c482e5ba83" application_java_class="android.app.Application" mono_runtime_initialization="mono.MonoPackageManager.LoadApplication (context);" extends_type="android.app.Activity" partial_assembly_qualified_name="SudoClipperMobile.MainActivity, SudoClipperMobile">
+      <constructors>
+        <constructor name="MainActivity" method="n_.ctor:()V:" jni_signature="()V" managed_parameters="" retval="void" is_dynamically_registered="True" />
+      </constructors>
+      <methods>
+        <method name="onCreate" method="n_onCreate:(Landroid/os/Bundle;)V:GetOnCreate_Landroid_os_Bundle_Handler" jni_signature="(Landroid/os/Bundle;)V" params="android.os.Bundle p0" retval="void" super_call="p0" activate_call="p0" />
+        <method name="onActivityResult" method="n_onActivityResult:(IILandroid/content/Intent;)V:GetOnActivityResult_IILandroid_content_Intent_Handler" jni_signature="(IILandroid/content/Intent;)V" params="int p0, int p1, android.content.Intent p2" retval="void" super_call="p0, p1, p2" activate_call="p0, p1, p2" />
+        <method name="onBackPressed" method="n_onBackPressed:()V:GetOnBackPressedHandler" jni_signature="()V" retval="void" />
+      </methods>
+    </type>
+    <type name="MainActivity_Client" package="crc641dd293c482e5ba83" application_java_class="android.app.Application" mono_runtime_initialization="mono.MonoPackageManager.LoadApplication (context);" extends_type="android.webkit.WebViewClient" partial_assembly_qualified_name="SudoClipperMobile.MainActivity+Client, SudoClipperMobile">
+      <constructors>
+        <constructor name="MainActivity_Client" method="n_.ctor:()V:" jni_signature="()V" managed_parameters="" retval="void" is_dynamically_registered="True" />
+        <constructor name="MainActivity_Client" method="n_.ctor:(Lcrc641dd293c482e5ba83/MainActivity;)V:" jni_signature="(Lcrc641dd293c482e5ba83/MainActivity;)V" managed_parameters="SudoClipperMobile.MainActivity, SudoClipperMobile" params="crc641dd293c482e5ba83.MainActivity p0" retval="void" is_dynamically_registered="True" super_call="" activate_call="p0" />
+      </constructors>
+      <methods>
+        <method name="onReceivedError" method="n_onReceivedError:(Landroid/webkit/WebView;Landroid/webkit/WebResourceRequest;Landroid/webkit/WebResourceError;)V:GetOnReceivedError_Landroid_webkit_WebView_Landroid_webkit_WebResourceRequest_Landroid_webkit_WebResourceError_Handler" jni_signature="(Landroid/webkit/WebView;Landroid/webkit/WebResourceRequest;Landroid/webkit/WebResourceError;)V" params="android.webkit.WebView p0, android.webkit.WebResourceRequest p1, android.webkit.WebResourceError p2" retval="void" super_call="p0, p1, p2" activate_call="p0, p1, p2" />
+        <method name="shouldOverrideUrlLoading" method="n_shouldOverrideUrlLoading:(Landroid/webkit/WebView;Landroid/webkit/WebResourceRequest;)Z:GetShouldOverrideUrlLoading_Landroid_webkit_WebView_Landroid_webkit_WebResourceRequest_Handler" jni_signature="(Landroid/webkit/WebView;Landroid/webkit/WebResourceRequest;)Z" params="android.webkit.WebView p0, android.webkit.WebResourceRequest p1" retval="boolean" super_call="p0, p1" activate_call="p0, p1" />
+      </methods>
+    </type>
+    <type name="MainActivity_Chrome" package="crc641dd293c482e5ba83" application_java_class="android.app.Application" mono_runtime_initialization="mono.MonoPackageManager.LoadApplication (context);" extends_type="android.webkit.WebChromeClient" partial_assembly_qualified_name="SudoClipperMobile.MainActivity+Chrome, SudoClipperMobile">
+      <constructors>
+        <constructor name="MainActivity_Chrome" method="n_.ctor:()V:" jni_signature="()V" managed_parameters="" retval="void" is_dynamically_registered="True" />
+        <constructor name="MainActivity_Chrome" method="n_.ctor:(Lcrc641dd293c482e5ba83/MainActivity;)V:" jni_signature="(Lcrc641dd293c482e5ba83/MainActivity;)V" managed_parameters="SudoClipperMobile.MainActivity, SudoClipperMobile" params="crc641dd293c482e5ba83.MainActivity p0" retval="void" is_dynamically_registered="True" super_call="" activate_call="p0" />
+      </constructors>
+      <methods>
+        <method name="onShowFileChooser" method="n_onShowFileChooser:(Landroid/webkit/WebView;Landroid/webkit/ValueCallback;Landroid/webkit/WebChromeClient$FileChooserParams;)Z:GetOnShowFileChooser_Landroid_webkit_WebView_Landroid_webkit_ValueCallback_Landroid_webkit_WebChromeClient_FileChooserParams_Handler" jni_signature="(Landroid/webkit/WebView;Landroid/webkit/ValueCallback;Landroid/webkit/WebChromeClient$FileChooserParams;)Z" params="android.webkit.WebView p0, android.webkit.ValueCallback p1, android.webkit.WebChromeClient.FileChooserParams p2" retval="boolean" super_call="p0, p1, p2" activate_call="p0, p1, p2" />
+      </methods>
+    </type>
+  </jcw-types>
+  <acw-types partial-assembly-name="SudoClipperMobile" module-name="SudoClipperMobile.dll">
+    <type assembly-qualified-name="SudoClipperMobile.MobileApp, SudoClipperMobile, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" compat-jni-name="sudoclippermobile.MobileApp" java-key="crc641dd293c482e5ba83.MobileApp" managed-key="SudoClipperMobile.MobileApp" partial-assembly-qualified-name="SudoClipperMobile.MobileApp, SudoClipperMobile" />
+    <type assembly-qualified-name="SudoClipperMobile.MainActivity, SudoClipperMobile, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" compat-jni-name="sudoclippermobile.MainActivity" java-key="crc641dd293c482e5ba83.MainActivity" managed-key="SudoClipperMobile.MainActivity" partial-assembly-qualified-name="SudoClipperMobile.MainActivity, SudoClipperMobile" />
+    <type assembly-qualified-name="SudoClipperMobile.MainActivity+Client, SudoClipperMobile, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" compat-jni-name="sudoclippermobile.MainActivity_Client" java-key="crc641dd293c482e5ba83.MainActivity_Client" managed-key="SudoClipperMobile.MainActivity.Client" partial-assembly-qualified-name="SudoClipperMobile.MainActivity+Client, SudoClipperMobile" />
+    <type assembly-qualified-name="SudoClipperMobile.MainActivity+Chrome, SudoClipperMobile, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" compat-jni-name="sudoclippermobile.MainActivity_Chrome" java-key="crc641dd293c482e5ba83.MainActivity_Chrome" managed-key="SudoClipperMobile.MainActivity.Chrome" partial-assembly-qualified-name="SudoClipperMobile.MainActivity+Chrome, SudoClipperMobile" />
+  </acw-types>
+</api>
