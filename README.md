@@ -1,3 +1,4 @@
+<img width="958" height="497" alt="2" src="https://github.com/user-attachments/assets/7f6445f8-b1e6-4818-a4f5-2b4c666aa610" />
 # SUDOCLIPPER
 
 A free, fully local clipping studio. Paste a YouTube link (or drop a video file), and it finds the
@@ -48,7 +49,7 @@ If they are already on your `PATH`, those copies are used instead. Progress is s
 in Config → Diagnostics. The download resumes where it stopped if the connection drops or the app is
 closed mid-way, and only one setup ever runs at a time — even with two windows open.
 
-## The three tabs
+## The Four tabs
 
 **Clipper** — paste a link or drop a file. Choose how many clips, a length preset, and captions on
 or off. A live job panel shows Download → Captions → Pick moments → Render with the worker's log.
@@ -56,8 +57,10 @@ or off. A live job panel shows Download → Captions → Pick moments → Render
 **Memory** — every clip rendered on this machine, with thumbnails, source, model, and playback.
 Search, open the folder, or delete a clip (which removes the files).
 
-**Config** — provider and API keys, the model list, clipping defaults, output folder, diagnostics.
+<img width="955" height="505" alt="new" src="https://github.com/user-attachments/assets/345fc60c-e15f-47a4-b880-f38c21a2d1c5" />
 
+**Config** — provider and API keys, the model list, clipping defaults, output folder, diagnostics.
+**Chat** -- Use Your own Models & Talk With Your Clips
 ## Models
 
 Pick a provider, paste a key, and the app lists every model that key can reach:
